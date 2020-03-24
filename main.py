@@ -21,7 +21,7 @@ background = pygame.image.load("background.jpg")
 explosion = mixer.Sound('explosion.wav')
 laser = mixer.Sound('laser.wav')
 mixer.music.load("background.wav")
-mixer.music.set_volume(0)
+mixer.music.set_volume(0.15)
 mixer.music.play(-1)
 
 # title and Icon
@@ -58,6 +58,12 @@ class MovingObject:
         elif self.x >= 747:
             self.x = 747
 
+class Player(MovingObject):
+    def fire_laser(self):
+        laser.play()
+        friendly_fire.append(Ammo('player_ammo.png', player.x, 440, 0, 0, -2))
+
+class Enemy(MovingObject):
     def advance(self):
         """
         advances the object in a predictable fashion
@@ -69,23 +75,28 @@ class MovingObject:
         else:
             self.y_speed = 0
 
+    def drop_bomb(self):
+        hostile_fire.append(Ammo('enemy_ammo.png', self.x, self.y - 20, 0, 0, 2))
+
+class Ammo(MovingObject):
     def collision(self, target):
         """
         collision detection
         """
-        if self != target:
-            distance = math.sqrt(math.pow(self.x - target.x, 2) + math.pow(self.y-target.y, 2))
-            if distance <= 40:
-                explosion.play()
-                return True
+        if self == target:
+            return False
+        distance = math.sqrt(math.pow(self.x - target.x, 2) + math.pow(self.y-target.y, 2))
+        if distance <= 40:
+            explosion.play()
+            return True
 
 # definitions
-player = MovingObject('player.png', 370, 480, 3, 0, 0)
+player = Player('player.png', 370, 480, 3, 0, 0)
 enemies = [] #list of enemies (python doesn't have arrays)
 NUM_OF_ENEMIES = 6
 for i in range(NUM_OF_ENEMIES):
-    enemies.append(MovingObject('alien.png', random.randint(0, 800),
-                                random.randint(50, 150), 2, 2, 0))
+    enemies.append(Enemy('alien.png', random.randint(0, 800),
+                         random.randint(50, 150), 2, 2, 0))
 friendly_fire = [] #list to hold all the player's ammo objects
 hostile_fire = [] #list to hold all the enemies' ammo objects
 score_value = 0
@@ -94,6 +105,7 @@ font = pygame.font.Font('freesansbold.ttf', 32)
 over_font = pygame.font.Font('freesansbold.ttf', 64)
 shield_font = pygame.font.Font('freesansbold.ttf', 32)
 ENEMY_FIRE = 25
+game_is_over = False
 
 pygame.time.set_timer(ENEMY_FIRE, 1500)
 
@@ -142,20 +154,19 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT or event.key == ord('a'):
+                print("left")
                 player.x_speed = -player.speed
             if event.key == pygame.K_RIGHT or event.key == ord('d'):
                 player.x_speed = player.speed
             if event.key == pygame.K_SPACE:
-                laser.play()
-                friendly_fire.append(MovingObject('player_ammo.png', player.x, 440, 0, 0, -2))
+                player.fire_laser()
         if event.type == pygame.KEYUP:
             if (event.key == pygame.K_LEFT or event.key == ord('a') or
                     event.key == pygame.K_RIGHT or event.key == ord('d')):
                 player.x_speed = 0
         if event.type == ENEMY_FIRE:
             random_enemy = random.randint(0, len(enemies)-1)
-            hostile_fire.append(MovingObject('enemy_ammo.png', enemies[random_enemy].x,
-                                             enemies[random_enemy].y - 20, 0, 0, 2))
+            enemies[random_enemy].drop_bomb()
     for enemy in enemies:
         enemy.advance()
     for projectile in friendly_fire:
