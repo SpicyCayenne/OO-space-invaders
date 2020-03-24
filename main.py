@@ -75,7 +75,7 @@ class Enemy(MovingObject):
 
     def drop_bomb(self):
         """drops the enemy's bombs"""
-        hostile_fire.append(Ammo('enemy_ammo.png', self.x, self.y - 20, 0, 0, 2))
+        hostile_fire.append(Ammo('enemy_ammo.png', self.x, self.y + 32, 0, 0, 2))
 
 class Ammo(MovingObject):
     """ammo subclass"""
@@ -103,7 +103,6 @@ font = pygame.font.Font('freesansbold.ttf', 32)
 over_font = pygame.font.Font('freesansbold.ttf', 64)
 shield_font = pygame.font.Font('freesansbold.ttf', 32)
 ENEMY_FIRE = 25
-game_is_over = False
 
 pygame.time.set_timer(ENEMY_FIRE, 1500)
 
@@ -149,16 +148,14 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT or event.key == ord('a'):
-                print("left")
+            if event.key == pygame.K_LEFT:
                 player.x_speed = -player.speed
-            if event.key == pygame.K_RIGHT or event.key == ord('d'):
+            if event.key == pygame.K_RIGHT:
                 player.x_speed = player.speed
             if event.key == pygame.K_SPACE:
                 player.fire_laser()
         if event.type == pygame.KEYUP:
-            if (event.key == pygame.K_LEFT or event.key == ord('a') or
-                    event.key == pygame.K_RIGHT or event.key == ord('d')):
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 player.x_speed = 0
         if event.type == ENEMY_FIRE:
             random_enemy = random.randint(0, len(enemies)-1)
