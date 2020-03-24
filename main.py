@@ -1,4 +1,7 @@
 """
+My take on a space invaders style game, with object oriented programming.
+This is my first time learning OOP.
+------------------------------------------
 Icon & Enemy made by Smashicons from www.flaticon.com
 Player made by Freepik from www.flaticon.com
 Background image from NASA
@@ -30,9 +33,7 @@ pygame.display.set_icon(icon)
 
 
 class MovingObject:
-    """
-    Parent class for all moving objects in the game
-    """
+    """Parent class for all moving objects in the game"""
     def __init__(self, image, x, y, SPEED, x_speed, y_speed):
         self.image = pygame.image.load(image)
         self.x = x
@@ -42,15 +43,11 @@ class MovingObject:
         self.y_speed = y_speed
 
     def draw(self):
-        """
-        draws the object on the screen
-        """
+        """draws the object on the screen"""
         screen.blit(self.image, (self.x, self.y))
 
     def move(self):
-        """
-        moves the object
-        """
+        """moves the object"""
         self.x += self.x_speed
         self.y += self.y_speed
         if self.x <= 0:
@@ -59,15 +56,16 @@ class MovingObject:
             self.x = 747
 
 class Player(MovingObject):
+    """Player subclass"""
     def fire_laser(self):
+        """fires the player's laser"""
         laser.play()
         friendly_fire.append(Ammo('player_ammo.png', player.x, 440, 0, 0, -2))
 
 class Enemy(MovingObject):
+    """Enemy subclass"""
     def advance(self):
-        """
-        advances the object in a predictable fashion
-        """
+        """advances the object in a predictable fashion"""
         self.move()
         if self.x <= 0 or self.x >= 747:
             self.y_speed = 40
@@ -76,13 +74,13 @@ class Enemy(MovingObject):
             self.y_speed = 0
 
     def drop_bomb(self):
+        """drops the enemy's bombs"""
         hostile_fire.append(Ammo('enemy_ammo.png', self.x, self.y - 20, 0, 0, 2))
 
 class Ammo(MovingObject):
+    """ammo subclass"""
     def collision(self, target):
-        """
-        collision detection
-        """
+        """collision detection"""
         if self == target:
             return False
         distance = math.sqrt(math.pow(self.x - target.x, 2) + math.pow(self.y-target.y, 2))
@@ -90,17 +88,17 @@ class Ammo(MovingObject):
             explosion.play()
             return True
 
-# definitions
+# declarations
 player = Player('player.png', 370, 480, 3, 0, 0)
-enemies = [] #list of enemies (python doesn't have arrays)
+enemies = [] #list to hold all the enemies (python doesn't have arrays)
 NUM_OF_ENEMIES = 6
 for i in range(NUM_OF_ENEMIES):
     enemies.append(Enemy('alien.png', random.randint(0, 800),
                          random.randint(50, 150), 2, 2, 0))
-friendly_fire = [] #list to hold all the player's ammo objects
-hostile_fire = [] #list to hold all the enemies' ammo objects
+friendly_fire = [] # list to hold all the player's ammo objects
+hostile_fire = [] # list to hold all the enemies' ammo objects
 score_value = 0
-shield_count = 3
+SHIELD_COUNT = 3
 font = pygame.font.Font('freesansbold.ttf', 32)
 over_font = pygame.font.Font('freesansbold.ttf', 64)
 shield_font = pygame.font.Font('freesansbold.ttf', 32)
@@ -110,9 +108,7 @@ game_is_over = False
 pygame.time.set_timer(ENEMY_FIRE, 1500)
 
 def redraw_game_window():
-    """
-    puts everything on the screen
-    """
+    """puts everything on the screen"""
     screen.blit(background, (0, 0))
     player.draw()
     for alien in enemies:
@@ -143,7 +139,7 @@ def game_over():
 
 def show_shields(x, y):
     """displays the number of shields remaining"""
-    shield_text = shield_font.render("Shields: " + str(shield_count), True, (255, 0, 0))
+    shield_text = shield_font.render("Shields: " + str(SHIELD_COUNT), True, (255, 0, 0))
     screen.blit(shield_text, (x, y))
 
 # game loop
@@ -185,8 +181,8 @@ while running:
         if bombs.y >= 480:
             hostile_fire.remove(bombs)
             if bombs.collision(player):
-                shield_count -= 1
-    if shield_count <= 0:
+                SHIELD_COUNT -= 1
+    if SHIELD_COUNT <= 0:
         game_over()
     player.move()
     redraw_game_window()
