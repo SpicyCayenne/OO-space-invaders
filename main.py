@@ -73,22 +73,29 @@ class MovingObject:
         """
         collision detection
         """
-        distance = math.sqrt(math.pow(self.x - target.x, 2) + math.pow(self.y-target.y, 2))
-        if distance <= 40:
-            explosion.play()
-            return True
+        if self != target:
+            distance = math.sqrt(math.pow(self.x - target.x, 2) + math.pow(self.y-target.y, 2))
+            if distance <= 40:
+                explosion.play()
+                return True
 
-
+# definitions
 player = MovingObject('player.png', 370, 480, 3, 0, 0)
 enemies = [] #list of enemies (python doesn't have arrays)
 NUM_OF_ENEMIES = 6
 for i in range(NUM_OF_ENEMIES):
     enemies.append(MovingObject('alien.png', random.randint(0, 800),
                                 random.randint(50, 150), 2, 2, 0))
-projectiles = [] #list to hold all the projectile objects
+friendly_fire = [] #list to hold all the player's ammo objects
+hostile_fire = [] #list to hold all the enemies' ammo objects
 score_value = 0
+shield_count = 3
 font = pygame.font.Font('freesansbold.ttf', 32)
 over_font = pygame.font.Font('freesansbold.ttf', 64)
+shield_font = pygame.font.Font('freesansbold.ttf', 32)
+ENEMY_FIRE = 25
+
+pygame.time.set_timer(ENEMY_FIRE, 1500)
 
 def redraw_game_window():
     """
@@ -101,9 +108,12 @@ def redraw_game_window():
         if alien.y >= 445:
             game_over()
             #break
-    for ammo in projectiles:
+    for ammo in friendly_fire:
         ammo.draw()
+    for bomb in hostile_fire:
+        bomb.draw()
     show_score(10, 10)
+    show_shields(625, 10)
     pygame.display.update()
 
 def show_score(x, y):
@@ -119,6 +129,11 @@ def game_over():
         alien.x_speed = 0
         alien.y_speed = 0.5
 
+def show_shields(x, y):
+    """displays the number of shields remaining"""
+    shield_text = shield_font.render("Shields: " + str(shield_count), True, (255, 0, 0))
+    screen.blit(shield_text, (x, y))
+
 # game loop
 running = True
 while running:
@@ -132,23 +147,35 @@ while running:
                 player.x_speed = player.speed
             if event.key == pygame.K_SPACE:
                 laser.play()
-                projectiles.append(MovingObject('player_ammo.png', player.x, 440, 0, 0, -2))
+                friendly_fire.append(MovingObject('player_ammo.png', player.x, 440, 0, 0, -2))
         if event.type == pygame.KEYUP:
             if (event.key == pygame.K_LEFT or event.key == ord('a') or
                     event.key == pygame.K_RIGHT or event.key == ord('d')):
                 player.x_speed = 0
+        if event.type == ENEMY_FIRE:
+            random_enemy = random.randint(0, len(enemies)-1)
+            hostile_fire.append(MovingObject('enemy_ammo.png', enemies[random_enemy].x,
+                                             enemies[random_enemy].y - 20, 0, 0, 2))
     for enemy in enemies:
         enemy.advance()
-    for projectile in projectiles:
+    for projectile in friendly_fire:
         projectile.move()
         if projectile.y <= 0:
-            projectiles.remove(projectile)
+            friendly_fire.remove(projectile)
             score_value -= 0.5
         for enemy in enemies:
             if projectile.collision(enemy):
-                projectiles.remove(projectile)
+                friendly_fire.remove(projectile)
                 enemy.x = random.randint(0, 747)
                 enemy.y = random.randint(50, 150)
                 score_value += 1
+    for bombs in hostile_fire:
+        bombs.move()
+        if bombs.y >= 480:
+            hostile_fire.remove(bombs)
+            if bombs.collision(player):
+                shield_count -= 1
+    if shield_count <= 0:
+        game_over()
     player.move()
     redraw_game_window()
